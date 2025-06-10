@@ -47,6 +47,36 @@ kvminit()
   kvmmap(TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 }
 
+void 
+vmprint(pagetable_t pagetable,uint64 depth)
+{
+  if (depth == 0)
+  {
+    printf("page table %p\n",pagetable);
+  }
+
+  if (depth > 2)
+  {
+    return;
+  }
+  
+  for(int i = 0; i < 512; i++)
+  {
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V) { // 如果页表项有效
+      // 按格式打印页表项
+      printf("..");
+      for(int j=0;j<depth;j++) {
+        printf(" ..");
+      }
+      uint64 child = PTE2PA(pte);
+      printf("%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+      vmprint((pagetable_t)child,depth+1);
+
+    }
+  } 
+}
+
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
 void
@@ -55,6 +85,7 @@ kvminithart()
   w_satp(MAKE_SATP(kernel_pagetable));
   sfence_vma();
 }
+
 
 // Return the address of the PTE in page table pagetable
 // that corresponds to virtual address va.  If alloc!=0,
