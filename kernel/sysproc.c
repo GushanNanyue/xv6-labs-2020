@@ -7,6 +7,9 @@
 #include "spinlock.h"
 #include "proc.h"
 
+int sigalarm(int ticks, void (*alarm_handle)());
+int sigreturn(void);
+
 uint64
 sys_exit(void)
 {
@@ -70,6 +73,7 @@ sys_sleep(void)
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
+  backtrace();
   return 0;
 }
 
@@ -94,4 +98,27 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64 
+sys_sigalarm(void)
+{
+  int n;
+  uint64 fn;
+  if (argint(0,n) < 0)
+  {
+    return -1;
+  }
+  if (argaddr(1,&fn) < 0)
+  {
+    return -1;
+  }
+  
+  return sigalarm(n,(void(*)())(fn));
+}
+
+uint64 
+sys_sigreturn(void)
+{
+  return sigreturn();
 }

@@ -132,3 +132,18 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+void 
+backtrace(void)
+{
+  printf("backtrace:\n");
+  uint64 x = f_rp();
+  while (PGROUNDDOWN(x) - PGROUNDUP(x) == PGSIZE)
+  {
+    uint64 return_address = *(uint64*)(x - 8);
+    printf("%p\n",return_address);
+    x = *(uint64*)(x - 16);
+  }
+  
+  
+}

@@ -127,6 +127,17 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // 创建用于恢复现场的页表
+  if((p->alarm_trapframe = (struct trapframe *)kalloc()) == 0){
+    release(&p->lock);
+    return 0;
+  }
+
+  p->alarm_handle = 0;
+  p->alarm_ticks = 0;
+  p->alarm_interval = 0;
+  p->alarm_goingoff = 0;
+
   return p;
 }
 
@@ -149,6 +160,16 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  p->state = UNUSED;
+
+if(p->alarm_trapframe)
+    kfree((void*)p->trapframe);
+  p->alarm_trapframe = 0;
+
+  p->alarm_handle = 0;
+  p->alarm_ticks = 0;
+  p->alarm_interval = 0;
+  p->alarm_goingoff = 0;
   p->state = UNUSED;
 }
 
